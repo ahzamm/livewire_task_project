@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,3 +25,13 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 require __DIR__.'/auth.php';
+
+Route::middleware('auth')->group(function () {
+    // Task Routes
+    Route::resource('tasks', TaskController::class);
+
+    // Admin-Only Routes
+    Route::middleware('admin')->group(function () {
+        // Add any admin-specific routes here (if needed)
+    });
+});
