@@ -20,7 +20,7 @@ class TaskController extends Controller
     {
         $tasks = Task::where('user_id', Auth::id())
             ->orWhere('assigned_to', Auth::id())
-            ->with(['user', 'stage', 'assignee'])
+            ->with(['user', 'stage', 'creator', 'assignee'])
             ->paginate(10);
 
         return view('tasks.index', compact('tasks'));
