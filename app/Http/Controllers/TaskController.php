@@ -30,7 +30,7 @@ class TaskController extends Controller
     public function create()
     {
         $stages = Stage::all();
-        $users = User::where('id', '!=', Auth::id())->get(); // Exclude the current user
+        $users = User::where('id', '!=', Auth::id())->where('is_admin', '!=', 1)->get(); // Exclude the current user
         return view('tasks.create', compact('stages', 'users'));
     }
 
