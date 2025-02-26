@@ -6,6 +6,7 @@ use App\Models\Stage;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\WithPagination;
 
 class TaskController extends Controller
@@ -119,5 +120,35 @@ class TaskController extends Controller
 
         $task->delete();
         return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
+    }
+
+    public function deleted()
+    {
+        Log::info('Request reached TaskController@deleted', ['user_id' => Auth::id()]);
+        $tasks = Task::onlyTrashed()
+            ->where(function ($query) {
+                $query->where('user_id', Auth::id()) // Task author
+                    ->orWhereHas('creator', function ($q) {
+                        $q->where('is_admin', 1); // Admin
+                    });
+            })
+            ->with(['user', 'stage', 'creator', 'assignee'])
+            ->paginate(10);
+
+        return view('tasks.deleted', compact('tasks'));
+    }
+
+    public function restore($id)
+    {
+        $task = Task::onlyTrashed()->findOrFail($id);
+
+        // Only task creator or admin can restore
+        if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $task->restore();
+
+        return redirect()->route('tasks.deleted')->with('success', 'Task restored successfully.');
     }
 }
