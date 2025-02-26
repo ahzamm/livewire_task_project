@@ -14,5 +14,8 @@ class TaskSeeder extends Seeder
     public function run(): void
     {
         Task::factory()->count(50)->create();
+
+
+        $this->command->info('Tasks created successfully!');
     }
 }

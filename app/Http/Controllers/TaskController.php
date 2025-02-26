@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\WithPagination;
-
+use Illuminate\Support\Facades\DB;
 class TaskController extends Controller
 {
     use WithPagination;
@@ -20,12 +20,17 @@ class TaskController extends Controller
 
     public function index()
     {
-        $tasks = Task::where('user_id', Auth::id())
-            ->orWhere('assigned_to', Auth::id())
-            ->with(['user', 'stage', 'creator', 'assignee'])
-            ->paginate(10);
+        $task = Task::with(['user', 'stage', 'creator', 'assignee']);
 
-        return view('tasks.index', compact('tasks'));
+        if (!Auth::user()->is_admin) {
+            $tasks = $task->where(function ($q) {
+                $q->where('user_id', Auth::id())->orWhere('assigned_to', Auth::id());
+            });
+        }
+
+        $tasks = $task->paginate(10);
+
+        return view('tasks.index', ['tasks' => $tasks]);
     }
 
     public function create()

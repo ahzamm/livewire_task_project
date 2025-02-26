@@ -21,9 +21,9 @@ class TaskFactory extends Factory
         return [
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'user_id' => User::where('is_admin', false)->inRandomOrder()->first()->id ?? User::factory(),
+            'user_id' => User::where('is_admin', 0)->inRandomOrder()->first()->id ?? User::factory(),
             'stage_id' => Stage::inRandomOrder()->first()->id ?? Stage::factory(),
-            'assigned_to' => User::inRandomOrder()->first()->id ?? User::factory(),
+            'assigned_to' => User::where('is_admin', 0)->inRandomOrder()->first()->id ?? User::factory(),
         ];
     }
 }
