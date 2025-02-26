@@ -1,31 +1,36 @@
 <?php
-
 namespace App\Livewire;
 
+use Livewire\Attributes\On; // Needed for Livewire 3
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Task;
 
 class TaskList extends Component
 {
-    use WithPagination; // Enable pagination
+    use WithPagination;
 
-    public $search = ''; // For search functionality
+    public string $search = '';
+
+    #[On('search-updated')] // Livewire 3 event binding (optional)
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
-        // Fetch tasks for the logged-in user (owner or assignee)
-        $tasks = Task::where('user_id', auth()->id())
-            ->orWhere('assigned_to', auth()->id())
+        $tasks = Task::where(function ($query) {
+                $query->where('user_id', auth()->id())
+                      ->orWhere('assigned_to', auth()->id());
+            })
             ->when($this->search, function ($query) {
-                $query->where('title', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                $query->where('title', 'like', "%{$this->search}%")
+                      ->orWhere('description', 'like', "%{$this->search}%");
             })
             ->with(['user', 'stage', 'assignee'])
-            ->paginate(10); // Paginate results
+            ->paginate(10);
 
-        return view('livewire.task-list', [
-            'tasks' => $tasks,
-        ]);
+        return view('livewire.task-list', compact('tasks'));
     }
 }
