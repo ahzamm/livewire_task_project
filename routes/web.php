@@ -24,21 +24,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Route::middleware('auth')->group(function () {
-    // Task Routes
     Route::resource('tasks', TaskController::class);
 
-
-    // Rotues to restoe rotues
     Route::get('/tasks/deleted', [TaskController::class, 'deleted'])->name('tasks.deleted');
     Route::patch('/tasks/{task}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
-
-
-
-    // Admin-Only Routes
-    Route::middleware('admin')->group(function () {
-        // Add any admin-specific routes here (if needed)
-    });
 });

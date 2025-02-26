@@ -13,13 +13,11 @@ class TaskController extends Controller
 {
     use WithPagination;
 
-    // Middleware for authentication
     public function __construct()
     {
         $this->middleware('auth');
     }
 
-    // Display a listing of the tasks
     public function index()
     {
         $tasks = Task::where('user_id', Auth::id())
@@ -30,15 +28,13 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
-    // Show the form for creating a new task
     public function create()
     {
         $stages = Stage::all();
-        $users = User::where('id', '!=', Auth::id())->where('is_admin', '!=', 1)->get(); // Exclude the current user
+        $users = User::where('id', '!=', Auth::id())->where('is_admin', '!=', 1)->get();
         return view('tasks.create', compact('stages', 'users'));
     }
 
-    // Store a newly created task
     public function store(Request $request)
     {
         $request->validate([
@@ -59,10 +55,8 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
     }
 
-    // Display the specified task
     public function show(Task $task)
     {
-        // Authorization: Only the task owner or assignee can view the task
         if ($task->user_id !== Auth::id() && $task->assigned_to !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -70,50 +64,42 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    // Show the form for editing the specified task
     public function edit(Task $task)
     {
-        // Authorization: Only the task owner or admin can edit the task
         if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }
 
         $stages = Stage::all();
-        $users = User::where('id', '!=', Auth::id())->get(); // Exclude the current user
+        $users = User::where('id', '!=', Auth::id())->get();
         return view('tasks.edit', compact('task', 'stages', 'users'));
     }
 
-    // Update the specified task
     public function update(Request $request, Task $task)
     {
-        // Authorization: Only task creator or admin can update the task
         if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }
-    
+
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
-    
-        // Only allow admins to update the stage field
+
         if (Auth::user()->is_admin) {
             $validatedData['stage_id'] = $request->validate([
                 'stage_id' => 'required|exists:stages,id',
             ])['stage_id'];
         }
-    
+
         $task->update($validatedData);
-    
+
         return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
-    
 
-    // Remove the specified task
     public function destroy(Task $task)
     {
-        // Authorization: Only the task owner or admin can delete the task
         if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }
@@ -127,10 +113,9 @@ class TaskController extends Controller
         Log::info('Request reached TaskController@deleted', ['user_id' => Auth::id()]);
         $tasks = Task::onlyTrashed()
             ->where(function ($query) {
-                $query->where('user_id', Auth::id()) // Task author
-                    ->orWhereHas('creator', function ($q) {
-                        $q->where('is_admin', 1); // Admin
-                    });
+                $query->where('user_id', Auth::id())->orWhereHas('creator', function ($q) {
+                    $q->where('is_admin', 1);
+                });
             })
             ->with(['user', 'stage', 'creator', 'assignee'])
             ->paginate(10);
@@ -142,7 +127,6 @@ class TaskController extends Controller
     {
         $task = Task::onlyTrashed()->findOrFail($id);
 
-        // Only task creator or admin can restore
         if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }

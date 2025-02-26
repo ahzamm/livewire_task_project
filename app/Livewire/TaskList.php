@@ -1,7 +1,7 @@
 <?php
 namespace App\Livewire;
 
-use Livewire\Attributes\On; // Needed for Livewire 3
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Task;
@@ -12,7 +12,7 @@ class TaskList extends Component
 
     public string $search = '';
 
-    #[On('search-updated')] // Livewire 3 event binding (optional)
+    #[On('search-updated')]
     public function updatingSearch()
     {
         $this->resetPage();
@@ -21,12 +21,10 @@ class TaskList extends Component
     public function render()
     {
         $tasks = Task::where(function ($query) {
-                $query->where('user_id', auth()->id())
-                      ->orWhere('assigned_to', auth()->id());
-            })
+            $query->where('user_id', auth()->id())->orWhere('assigned_to', auth()->id());
+        })
             ->when($this->search, function ($query) {
-                $query->where('title', 'like', "%{$this->search}%")
-                      ->orWhere('description', 'like', "%{$this->search}%");
+                $query->where('title', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%");
             })
             ->with(['user', 'stage', 'assignee'])
             ->paginate(10);
