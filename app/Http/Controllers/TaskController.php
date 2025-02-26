@@ -62,7 +62,7 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        if ($task->user_id !== Auth::id() && $task->assigned_to !== Auth::id()) {
+        if (!Auth::user()->is_admin && $task->user_id !== Auth::id() && $task->assigned_to !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -115,15 +115,13 @@ class TaskController extends Controller
 
     public function deleted()
     {
-        Log::info('Request reached TaskController@deleted', ['user_id' => Auth::id()]);
-        $tasks = Task::onlyTrashed()
-            ->where(function ($query) {
-                $query->where('user_id', Auth::id())->orWhereHas('creator', function ($q) {
-                    $q->where('is_admin', 1);
-                });
-            })
-            ->with(['user', 'stage', 'creator', 'assignee'])
-            ->paginate(10);
+        $tasks = Task::onlyTrashed()->with(['user', 'stage', 'creator', 'assignee']);
+        if (!Auth::user()->is_admin) {
+            $tasks = $tasks->where(function ($q) {
+                $q->where('user_id', Auth::id())->orWhere('assigned_to', Auth::id());
+            });
+        }
+        $tasks = $tasks->paginate(10);
 
         return view('tasks.deleted', compact('tasks'));
     }

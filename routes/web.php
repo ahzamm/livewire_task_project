@@ -27,8 +27,10 @@ Route::view('profile', 'profile')
 require __DIR__ . '/auth.php';
 
 Route::middleware('auth')->group(function () {
-    Route::resource('tasks', TaskController::class);
 
     Route::get('/tasks/deleted', [TaskController::class, 'deleted'])->name('tasks.deleted');
     Route::patch('/tasks/{task}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
+    
+    Route::resource('tasks', TaskController::class);
+
 });
