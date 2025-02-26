@@ -25,6 +25,8 @@
                     </div>
 
                     <!-- Stage -->
+                   <!-- Stage (Only for Admins) -->
+                    @if (auth()->user()->is_admin)
                     <div class="mb-4">
                         <label for="stage_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stage</label>
                         <select name="stage_id" id="stage_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" required>
@@ -33,6 +35,14 @@
                             @endforeach
                         </select>
                     </div>
+                    @else
+                    <!-- Show Stage Name as Text (Non-Admins) -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stage</label>
+                        <p class="mt-1 block w-full rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-2">{{ $task->stage->name }}</p>
+                    </div>
+                    @endif
+
 
                     <!-- Assigned To -->
                     <div class="mb-4">

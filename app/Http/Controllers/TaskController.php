@@ -85,27 +85,29 @@ class TaskController extends Controller
     // Update the specified task
     public function update(Request $request, Task $task)
     {
-        // Authorization: Only the task owner or admin can update the task
+        // Authorization: Only task creator or admin can update the task
         if ($task->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }
-
-        $request->validate([
+    
+        $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'stage_id' => 'required|exists:stages,id',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
-
-        $task->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'stage_id' => $request->stage_id,
-            'assigned_to' => $request->assigned_to,
-        ]);
-
+    
+        // Only allow admins to update the stage field
+        if (Auth::user()->is_admin) {
+            $validatedData['stage_id'] = $request->validate([
+                'stage_id' => 'required|exists:stages,id',
+            ])['stage_id'];
+        }
+    
+        $task->update($validatedData);
+    
         return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
+    
 
     // Remove the specified task
     public function destroy(Task $task)
