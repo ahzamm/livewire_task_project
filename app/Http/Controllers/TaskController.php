@@ -6,9 +6,12 @@ use App\Models\Stage;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Livewire\WithPagination;
 
 class TaskController extends Controller
 {
+    use WithPagination;
+
     // Middleware for authentication
     public function __construct()
     {
